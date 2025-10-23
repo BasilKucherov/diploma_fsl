@@ -14,6 +14,7 @@ experiment_name: ${method.name}_${backbone.name}_${dataset.name}
 # Device settings
 device: cuda
 num_workers: 4
+prefetch_factor: 2
 
 # Mixed precision training
 fp16_precision: true
