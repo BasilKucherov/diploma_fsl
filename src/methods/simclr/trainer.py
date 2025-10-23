@@ -8,6 +8,7 @@ MIT License
 """
 
 import logging
+import subprocess
 from pathlib import Path
 
 import torch
@@ -75,6 +76,43 @@ class SimCLRTrainer:
         # Cross entropy loss for NT-Xent
         self.criterion = torch.nn.CrossEntropyLoss().to(self.device)
 
+    def _log_shm_usage(self, epoch):
+        """Log shared memory usage for debugging."""
+        try:
+            # Get df output for /dev/shm
+            result = subprocess.run(
+                ["df", "-BM", "/dev/shm"], capture_output=True, text=True, check=True
+            )
+            lines = result.stdout.strip().split("\n")
+            if len(lines) >= 2:
+                parts = lines[1].split()
+                total = int(parts[1].rstrip("M"))
+                used = int(parts[2].rstrip("M"))
+                avail = int(parts[3].rstrip("M"))
+                used_pct = int(parts[4].rstrip("%"))
+
+                # Count files in /dev/shm
+                shm_path = Path("/dev/shm")
+                num_files = len(list(shm_path.iterdir())) if shm_path.exists() else 0
+
+                # Count shared memory segments
+                try:
+                    seg_result = subprocess.run(
+                        ["ipcs", "-m"], capture_output=True, text=True, check=True
+                    )
+                    num_segments = sum(
+                        1 for line in seg_result.stdout.split("\n") if line.startswith("0x")
+                    )
+                except Exception:
+                    num_segments = -1
+
+                self.logger.info(
+                    f"[SHM] Epoch {epoch:3d} | Used: {used:6d}MB ({used_pct:2d}%) | "
+                    f"Avail: {avail:6d}MB | Files: {num_files:4d} | Segments: {num_segments:5d}"
+                )
+        except Exception as e:
+            self.logger.warning(f"Could not log shared memory usage: {e}")
+
     def info_nce_loss(self, features, batch_size):
         """Compute NT-Xent (Normalized Temperature-scaled Cross Entropy) loss.
 
@@ -122,6 +160,12 @@ class SimCLRTrainer:
         n_iter = 0
         self.logger.info(f"Start SimCLR training for {epochs} epochs.")
         self.logger.info(f"Training on device: {self.device}")
+
+        # Log initial shared memory state
+        self.logger.info("=" * 80)
+        self.logger.info("Initial Shared Memory State:")
+        self._log_shm_usage(0)
+        self.logger.info("=" * 80)
 
         # Setup profiler if enabled
         profiler_enabled = self.profiler_config.get("enabled", False)
@@ -238,6 +282,9 @@ class SimCLRTrainer:
                 f"Top5: {epoch_acc_top5:.2f}%, "
                 f"LR: {self.optimizer.param_groups[0]['lr']:.6f}"
             )
+
+            # Log shared memory usage for debugging
+            self._log_shm_usage(epoch + 1)
 
             checkpoint_dir = self.log_dir / "checkpoints"
             checkpoint_dir.mkdir(exist_ok=True)
