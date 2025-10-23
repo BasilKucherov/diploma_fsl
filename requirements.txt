@@ -14,6 +14,7 @@ pillow>=10.0.0
 opencv-python>=4.8.0
 albumentations>=1.3.0
 pandas>=2.0.0
+kornia>=0.7.0  # GPU-based augmentations
 
 # Model architectures
 timm>=0.9.0

@@ -13,8 +13,9 @@ temperature: 0.07
 projection_dim: 128
 n_views: 2
 
-# Augmentation strength
+# Augmentation settings
 augmentation_strength: 1.0
+gpu_augmentations: false  # Use GPU-based augmentations (Kornia) - much faster!
 
 # Learning rate schedule
 warmup_epochs: 10

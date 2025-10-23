@@ -50,6 +50,7 @@ class SimCLRTrainer:
         log_every_n_steps=100,
         warmup_epochs=10,
         profiler_config=None,
+        gpu_augmentations=None,
     ):
         self.model = model.to(device)
         self.optimizer = optimizer
@@ -60,6 +61,7 @@ class SimCLRTrainer:
         self.log_every_n_steps = log_every_n_steps
         self.warmup_epochs = warmup_epochs
         self.profiler_config = profiler_config or {}
+        self.gpu_augmentations = gpu_augmentations
 
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
@@ -163,11 +165,27 @@ class SimCLRTrainer:
 
             pbar = tqdm(train_loader, desc=f"Epoch {epoch + 1}/{epochs}")
             for images, _ in pbar:
-                # images is a list of 2 views: [view1, view2]
-                # Concatenate views: (batch_size, 3, H, W) * 2 -> (2*batch_size, 3, H, W)
-                images = torch.cat(images, dim=0)
-                images = images.to(self.device)
-                batch_size = len(images) // 2
+                # Handle GPU augmentations vs CPU augmentations
+                if self.gpu_augmentations is not None:
+                    # GPU augmentations: images is a single tensor (B, C, H, W)
+                    # Apply augmentations on GPU to create views
+                    if isinstance(images, list):
+                        images = images[0]  # Take first element if wrapped in list
+                    images = images.to(self.device)
+                    batch_size = len(images)
+
+                    # Apply GPU augmentations to get multiple views
+                    with torch.no_grad():  # Don't track gradients for augmentations
+                        views = self.gpu_augmentations(images)
+
+                    # Concatenate views: list of (B, C, H, W) -> (2*B, C, H, W)
+                    images = torch.cat(views, dim=0)
+                else:
+                    # CPU augmentations: images is a list of 2 views: [view1, view2]
+                    # Concatenate views: (batch_size, 3, H, W) * 2 -> (2*batch_size, 3, H, W)
+                    images = torch.cat(images, dim=0)
+                    images = images.to(self.device)
+                    batch_size = len(images) // 2
 
                 with autocast(enabled=self.fp16_precision):
                     features = self.model(images)

@@ -17,8 +17,14 @@ from omegaconf import DictConfig, OmegaConf
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from torchvision import transforms
+
 from src.datasets.ssl_datasets import get_cifar10_ssl, get_stl10_ssl
 from src.methods.simclr.augmentations import get_simclr_augmentations
+from src.methods.simclr.gpu_augmentations import (
+    check_kornia_available,
+    get_simclr_gpu_augmentations,
+)
 from src.methods.simclr.model import SimCLRModel
 from src.methods.simclr.trainer import SimCLRTrainer
 from src.models.backbones import get_resnet18, get_resnet50
@@ -49,16 +55,25 @@ def get_backbone(config):
 def get_dataset(config):
     dataset_name = config.dataset.name.lower()
 
-    transform = get_simclr_augmentations(
-        size=config.dataset.image_size, s=config.method.augmentation_strength
-    )
+    # Check if GPU augmentations are enabled
+    use_gpu_aug = getattr(config.method, "gpu_augmentations", False)
+
+    if use_gpu_aug:
+        # For GPU augmentations, only use ToTensor on CPU
+        # Actual augmentations will be done on GPU in trainer
+        transform = transforms.Compose([transforms.ToTensor()])
+    else:
+        # Use full CPU augmentation pipeline
+        transform = get_simclr_augmentations(
+            size=config.dataset.image_size, s=config.method.augmentation_strength
+        )
 
     if dataset_name == "cifar10":
         dataset = get_cifar10_ssl(
             data_root=config.dataset.data_root,
             split=config.dataset.split,
             transform=transform,
-            n_views=config.method.n_views,
+            n_views=config.method.n_views if not use_gpu_aug else 1,  # GPU aug creates views
             download=config.dataset.download,
         )
     elif dataset_name == "stl10":
@@ -66,7 +81,7 @@ def get_dataset(config):
             data_root=config.dataset.data_root,
             split=config.dataset.split,
             transform=transform,
-            n_views=config.method.n_views,
+            n_views=config.method.n_views if not use_gpu_aug else 1,  # GPU aug creates views
             download=config.dataset.download,
         )
     else:
@@ -133,12 +148,26 @@ def main(config: DictConfig):
     logger.info(f"Output directory: {output_dir}")
 
     logger.info(f"Loading dataset: {config.dataset.name}")
+
+    # Check if GPU augmentations are requested
+    use_gpu_aug = getattr(config.method, "gpu_augmentations", False)
+    if use_gpu_aug:
+        if not check_kornia_available():
+            logger.error("GPU augmentations requested but Kornia is not installed!")
+            logger.error("Install with: pip install kornia>=0.7.0")
+            raise ImportError("Kornia required for GPU augmentations")
+        logger.info("Using GPU-based augmentations (Kornia)")
+    else:
+        logger.info("Using CPU-based augmentations")
+
     train_dataset = get_dataset(config)
     logger.info(f"Dataset size: {len(train_dataset)}")
 
     check_shared_memory(logger, config.num_workers)
 
     prefetch_factor = getattr(config, "prefetch_factor", 2) if config.num_workers > 0 else None
+    # Allow disabling persistent_workers via config for debugging
+    persistent_workers = getattr(config, "persistent_workers", True) and config.num_workers > 0
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
@@ -147,13 +176,13 @@ def main(config: DictConfig):
         num_workers=config.num_workers,
         pin_memory=True,
         drop_last=True,
-        persistent_workers=config.num_workers > 0,
+        persistent_workers=persistent_workers,
         prefetch_factor=prefetch_factor,
     )
     logger.info(f"Number of batches: {len(train_loader)}")
     logger.info(
         f"DataLoader config: num_workers={config.num_workers}, "
-        f"persistent_workers={config.num_workers > 0}, "
+        f"persistent_workers={persistent_workers}, "
         f"prefetch_factor={prefetch_factor}"
     )
 
@@ -179,6 +208,17 @@ def main(config: DictConfig):
         optimizer, T_max=len(train_loader), eta_min=0, last_epoch=-1
     )
 
+    # Setup GPU augmentations if enabled
+    gpu_aug_module = None
+    if use_gpu_aug:
+        gpu_aug_module = get_simclr_gpu_augmentations(
+            size=config.dataset.image_size,
+            s=config.method.augmentation_strength,
+            n_views=config.method.n_views,
+            normalize=True,
+        ).to(device)
+        logger.info(f"GPU augmentation module created and moved to {device}")
+
     logger.info("Initializing SimCLR trainer")
     trainer = SimCLRTrainer(
         model=model,
@@ -194,6 +234,7 @@ def main(config: DictConfig):
         profiler_config=(
             OmegaConf.to_container(config.profiler) if hasattr(config, "profiler") else None
         ),
+        gpu_augmentations=gpu_aug_module,
     )
 
     logger.info("=" * 80)
