@@ -5,66 +5,12 @@ Copyright (c) 2020 Thalles Silva
 Repository: https://github.com/sthalles/SimCLR
 Commit: 1848fc934ad844ae630e6c452300433fe99acfd9
 MIT License
+
+Optimized version: Uses native torchvision transforms instead of custom implementations
+to avoid PIL↔Tensor conversion overhead.
 """
 
-import numpy as np
-import torch
-import torch.nn as nn
 from torchvision import transforms
-
-
-class GaussianBlur:
-    """Apply Gaussian blur to a single image on CPU."""
-
-    def __init__(self, kernel_size):
-        """Initialize Gaussian blur transform.
-
-        Args:
-            kernel_size: Size of the Gaussian kernel
-        """
-        radias = kernel_size // 2
-        kernel_size = radias * 2 + 1
-        self.blur_h = nn.Conv2d(
-            3, 3, kernel_size=(kernel_size, 1), stride=1, padding=0, bias=False, groups=3
-        )
-        self.blur_v = nn.Conv2d(
-            3, 3, kernel_size=(1, kernel_size), stride=1, padding=0, bias=False, groups=3
-        )
-        self.k = kernel_size
-        self.r = radias
-
-        self.blur = nn.Sequential(nn.ReflectionPad2d(radias), self.blur_h, self.blur_v)
-
-        self.pil_to_tensor = transforms.ToTensor()
-        self.tensor_to_pil = transforms.ToPILImage()
-
-    def __call__(self, img):
-        """Apply Gaussian blur to image.
-
-        Args:
-            img: PIL Image
-
-        Returns:
-            PIL Image with Gaussian blur applied
-        """
-        img = self.pil_to_tensor(img).unsqueeze(0)
-
-        sigma = np.random.uniform(0.1, 2.0)
-        x = np.arange(-self.r, self.r + 1)
-        x = np.exp(-np.power(x, 2) / (2 * sigma * sigma))
-        x = x / x.sum()
-        x = torch.from_numpy(x).view(1, -1).repeat(3, 1)
-
-        self.blur_h.weight.data.copy_(x.view(3, 1, self.k, 1))
-        self.blur_v.weight.data.copy_(x.view(3, 1, 1, self.k))
-
-        with torch.no_grad():
-            img = self.blur(img)
-            img = img.squeeze()
-
-        img = self.tensor_to_pil(img)
-
-        return img
 
 
 class ContrastiveLearningViewGenerator:
@@ -93,15 +39,18 @@ class ContrastiveLearningViewGenerator:
 
 
 def get_simclr_augmentations(size, s=1.0):
-    """Get SimCLR data augmentation pipeline.
+    """Get SimCLR data augmentation pipeline (optimized version).
 
     This implements the augmentation strategy from the SimCLR paper:
     - Random resized crop
     - Random horizontal flip
     - Color jitter (with probability 0.8)
     - Random grayscale (with probability 0.2)
-    - Gaussian blur
+    - Gaussian blur (using native torchvision transform)
     - Convert to tensor
+
+    Optimization: Replaced custom GaussianBlur with torchvision.transforms.GaussianBlur
+    to eliminate expensive PIL↔Tensor conversion overhead.
 
     Args:
         size: Target image size (height and width)
@@ -110,6 +59,11 @@ def get_simclr_augmentations(size, s=1.0):
     Returns:
         torchvision.transforms.Compose: Composed augmentation transforms
     """
+    # Calculate kernel size (must be odd)
+    kernel_size = int(0.1 * size)
+    if kernel_size % 2 == 0:
+        kernel_size += 1
+
     color_jitter = transforms.ColorJitter(0.8 * s, 0.8 * s, 0.8 * s, 0.2 * s)
     data_transforms = transforms.Compose(
         [
@@ -117,7 +71,8 @@ def get_simclr_augmentations(size, s=1.0):
             transforms.RandomHorizontalFlip(),
             transforms.RandomApply([color_jitter], p=0.8),
             transforms.RandomGrayscale(p=0.2),
-            GaussianBlur(kernel_size=int(0.1 * size)),
+            # Native GaussianBlur: much faster, no PIL↔Tensor conversions
+            transforms.GaussianBlur(kernel_size=kernel_size, sigma=(0.1, 2.0)),
             transforms.ToTensor(),
         ]
     )

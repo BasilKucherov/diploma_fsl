@@ -79,14 +79,14 @@ def check_shared_memory(logger, num_workers):
     """Check /dev/shm size and warn if insufficient for multiprocessing."""
     if num_workers == 0:
         return
-    
+
     try:
         shm_path = Path("/dev/shm")
         if shm_path.exists():
             stat = os.statvfs(shm_path)
             shm_size_gb = (stat.f_bavail * stat.f_frsize) / (1024**3)
             logger.info(f"Shared memory (/dev/shm) available: {shm_size_gb:.2f} GB")
-            
+
             if shm_size_gb < 1.0:
                 logger.warning("=" * 80)
                 logger.warning("WARNING: Low shared memory detected!")
@@ -136,8 +136,9 @@ def main(config: DictConfig):
     train_dataset = get_dataset(config)
     logger.info(f"Dataset size: {len(train_dataset)}")
 
-    # Check shared memory availability for DataLoader workers
     check_shared_memory(logger, config.num_workers)
+
+    prefetch_factor = getattr(config, "prefetch_factor", 2) if config.num_workers > 0 else None
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
@@ -146,14 +147,14 @@ def main(config: DictConfig):
         num_workers=config.num_workers,
         pin_memory=True,
         drop_last=True,
-        persistent_workers=True if config.num_workers > 0 else False,
-        prefetch_factor=2 if config.num_workers > 0 else None,
+        persistent_workers=config.num_workers > 0,
+        prefetch_factor=prefetch_factor,
     )
     logger.info(f"Number of batches: {len(train_loader)}")
     logger.info(
         f"DataLoader config: num_workers={config.num_workers}, "
         f"persistent_workers={config.num_workers > 0}, "
-        f"prefetch_factor={2 if config.num_workers > 0 else None}"
+        f"prefetch_factor={prefetch_factor}"
     )
 
     logger.info(f"Building model: {config.backbone.name}")
@@ -190,7 +191,9 @@ def main(config: DictConfig):
         fp16_precision=config.fp16_precision,
         log_every_n_steps=config.method.log_every_n_steps,
         warmup_epochs=config.method.warmup_epochs,
-        profiler_config=OmegaConf.to_container(config.profiler) if hasattr(config, "profiler") else None,
+        profiler_config=(
+            OmegaConf.to_container(config.profiler) if hasattr(config, "profiler") else None
+        ),
     )
 
     logger.info("=" * 80)
