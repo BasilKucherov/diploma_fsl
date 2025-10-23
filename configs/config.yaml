@@ -18,6 +18,17 @@ num_workers: 4
 # Mixed precision training
 fp16_precision: true
 
+# Profiling settings
+profiler:
+  enabled: false
+  wait: 1
+  warmup: 1
+  active: 3
+  repeat: 2
+  record_shapes: true
+  profile_memory: true
+  with_stack: false
+
 # Hydra settings
 hydra:
   run:
