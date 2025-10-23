@@ -18,7 +18,7 @@ def setup_logging(log_dir=None, log_file="training.log", level=logging.INFO):
     """
     logger = logging.getLogger()
     logger.setLevel(level)
-
+    logger.handlers.clear()
     formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
     console_handler = logging.StreamHandler(sys.stdout)
@@ -29,7 +29,7 @@ def setup_logging(log_dir=None, log_file="training.log", level=logging.INFO):
     if log_dir is not None:
         log_dir = Path(log_dir)
         log_dir.mkdir(parents=True, exist_ok=True)
-        file_handler = logging.FileHandler(log_dir / log_file)
+        file_handler = logging.FileHandler(log_dir / log_file, mode="w")
         file_handler.setLevel(level)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)

@@ -11,6 +11,7 @@ from pathlib import Path
 import hydra
 import numpy as np
 import torch
+from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -75,12 +76,12 @@ def get_dataset(config):
 
 @hydra.main(version_base=None, config_path="../configs", config_name="config")
 def main(config: DictConfig):
-    # Setup output directory first
-    output_dir = Path(config.output_dir) / config.experiment_name
+    # Use Hydra's runtime output directory (timestamped per run)
+    hydra_cfg = HydraConfig.get()
+    output_dir = Path(hydra_cfg.runtime.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Setup logging
-    logger = setup_logging(log_dir=output_dir, log_file="training.log")
+    logger = setup_logging(log_dir=output_dir, log_file="train.log")
 
     logger.info("=" * 80)
     logger.info("Configuration:")
@@ -161,8 +162,10 @@ def main(config: DictConfig):
 
     logger.info("=" * 80)
     logger.info("Training completed!")
-    logger.info(f"Checkpoints saved to: {output_dir / 'checkpoints'}")
-    logger.info(f"TensorBoard logs saved to: {output_dir / 'tensorboard'}")
+    logger.info(f"Run directory: {output_dir}")
+    logger.info(f"Checkpoints: {output_dir / 'checkpoints'}")
+    logger.info(f"TensorBoard: {output_dir / 'tensorboard'}")
+    logger.info(f"Logs: {output_dir / 'train.log'}")
     logger.info("=" * 80)
 
 
