@@ -29,6 +29,7 @@ class SimCLRTrainer:
         scheduler: Learning rate scheduler
         device: Device to train on (cuda or cpu)
         log_dir: Directory for logs and checkpoints
+        logger: Logger instance (optional, will create default if not provided)
         temperature: Temperature parameter for NT-Xent loss
         fp16_precision: Whether to use mixed precision training
         log_every_n_steps: Log metrics every N steps
@@ -42,6 +43,7 @@ class SimCLRTrainer:
         scheduler,
         device,
         log_dir,
+        logger=None,
         temperature=0.07,
         fp16_precision=True,
         log_every_n_steps=100,
@@ -60,12 +62,10 @@ class SimCLRTrainer:
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.writer = SummaryWriter(log_dir=str(self.log_dir / "tensorboard"))
 
-        logging.basicConfig(
-            filename=str(self.log_dir / "training.log"),
-            level=logging.INFO,
-            format="%(asctime)s - %(levelname)s - %(message)s",
-        )
-        self.logger = logging.getLogger(__name__)
+        if logger is None:
+            self.logger = logging.getLogger(__name__)
+        else:
+            self.logger = logger
 
         # Cross entropy loss for NT-Xent
         self.criterion = torch.nn.CrossEntropyLoss().to(self.device)

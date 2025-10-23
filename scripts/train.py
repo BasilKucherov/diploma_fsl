@@ -143,6 +143,7 @@ def main(config: DictConfig):
         scheduler=scheduler,
         device=device,
         log_dir=str(output_dir),
+        logger=logger,
         temperature=config.method.temperature,
         fp16_precision=config.fp16_precision,
         log_every_n_steps=config.method.log_every_n_steps,
