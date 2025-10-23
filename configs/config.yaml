@@ -1,0 +1,27 @@
+# Base configuration for SSL training
+
+defaults:
+  - method: simclr
+  - backbone: resnet18
+  - dataset: cifar10
+  - _self_
+
+# Experiment settings
+seed: 42
+output_dir: experiments
+experiment_name: ${method.name}_${backbone.name}_${dataset.name}
+
+# Device settings
+device: cuda
+num_workers: 4
+
+# Mixed precision training
+fp16_precision: true
+
+# Hydra settings
+hydra:
+  run:
+    dir: ${output_dir}/${experiment_name}/${now:%Y-%m-%d_%H-%M-%S}
+  job:
+    chdir: false
+

@@ -1,0 +1,8 @@
+# CIFAR-10 dataset configuration
+
+name: cifar10
+data_root: ./data
+image_size: 32
+split: train
+download: true
+

@@ -1,0 +1,6 @@
+# ResNet-18 backbone configuration
+
+name: resnet18
+architecture: resnet18
+feature_dim: 512
+pretrained: false

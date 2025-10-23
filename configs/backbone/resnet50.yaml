@@ -1,0 +1,6 @@
+# ResNet-50 backbone configuration
+
+name: resnet50
+architecture: resnet50
+feature_dim: 2048
+pretrained: false

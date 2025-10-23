@@ -1,0 +1,8 @@
+# STL-10 dataset configuration
+
+name: stl10
+data_root: ./data
+image_size: 96
+split: train+unlabeled  # Use both labeled train and unlabeled data for SSL
+download: true
+
