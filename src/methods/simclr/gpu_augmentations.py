@@ -15,7 +15,13 @@ import torch.nn as nn
 
 try:
     import kornia.augmentation as K
-    from kornia.constants import Resample
+
+    # Try to import Resample, but don't fail if it doesn't exist
+    try:
+        from kornia.constants import Resample
+    except (ImportError, AttributeError):
+        # In newer versions, Resample might be elsewhere or we can use string directly
+        Resample = None
 
     KORNIA_AVAILABLE = True
 except ImportError:
@@ -60,13 +66,22 @@ class SimCLRGPUAugmentation(nn.Module):
 
         # Build augmentation pipeline
         # Note: We apply augmentations sequentially to match CPU behavior
+        # Determine resample mode (Kornia API changed across versions)
+        if Resample is not None:
+            try:
+                resample_mode = Resample.BILINEAR.name
+            except AttributeError:
+                resample_mode = "bilinear"
+        else:
+            resample_mode = "bilinear"
+
         self.augmentations = nn.Sequential(
             # Random resized crop
             K.RandomResizedCrop(
                 size=(size, size),
                 scale=(0.08, 1.0),
                 ratio=(0.75, 1.3333),
-                resample=Resample.BILINEAR.name,
+                resample=resample_mode,
                 same_on_batch=False,
             ),
             # Random horizontal flip
