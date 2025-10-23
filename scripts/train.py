@@ -5,6 +5,7 @@ Example usage:
     python scripts/train.py method=simclr backbone=resnet50 dataset=stl10 method.epochs=100
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -74,6 +75,36 @@ def get_dataset(config):
     return dataset
 
 
+def check_shared_memory(logger, num_workers):
+    """Check /dev/shm size and warn if insufficient for multiprocessing."""
+    if num_workers == 0:
+        return
+    
+    try:
+        shm_path = Path("/dev/shm")
+        if shm_path.exists():
+            stat = os.statvfs(shm_path)
+            shm_size_gb = (stat.f_bavail * stat.f_frsize) / (1024**3)
+            logger.info(f"Shared memory (/dev/shm) available: {shm_size_gb:.2f} GB")
+            
+            if shm_size_gb < 1.0:
+                logger.warning("=" * 80)
+                logger.warning("WARNING: Low shared memory detected!")
+                logger.warning(f"/dev/shm size: {shm_size_gb:.2f} GB (< 1 GB)")
+                logger.warning(f"num_workers: {num_workers}")
+                logger.warning("")
+                logger.warning("This may cause 'Bus error' crashes in DataLoader workers.")
+                logger.warning("Solutions:")
+                logger.warning("  1. Increase Docker shared memory: docker run --shm-size=8g ...")
+                logger.warning("  2. Use host IPC namespace: docker run --ipc=host ...")
+                logger.warning("  3. Reduce num_workers in config.yaml")
+                logger.warning("=" * 80)
+        else:
+            logger.info("/dev/shm not found (might be on non-Linux system)")
+    except Exception as e:
+        logger.warning(f"Could not check shared memory: {e}")
+
+
 @hydra.main(version_base=None, config_path="../configs", config_name="config")
 def main(config: DictConfig):
     # Use Hydra's runtime output directory (timestamped per run)
@@ -105,6 +136,9 @@ def main(config: DictConfig):
     train_dataset = get_dataset(config)
     logger.info(f"Dataset size: {len(train_dataset)}")
 
+    # Check shared memory availability for DataLoader workers
+    check_shared_memory(logger, config.num_workers)
+
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=config.method.batch_size,
@@ -112,8 +146,15 @@ def main(config: DictConfig):
         num_workers=config.num_workers,
         pin_memory=True,
         drop_last=True,
+        persistent_workers=True if config.num_workers > 0 else False,
+        prefetch_factor=2 if config.num_workers > 0 else None,
     )
     logger.info(f"Number of batches: {len(train_loader)}")
+    logger.info(
+        f"DataLoader config: num_workers={config.num_workers}, "
+        f"persistent_workers={config.num_workers > 0}, "
+        f"prefetch_factor={2 if config.num_workers > 0 else None}"
+    )
 
     logger.info(f"Building model: {config.backbone.name}")
     backbone = get_backbone(config)
@@ -149,6 +190,7 @@ def main(config: DictConfig):
         fp16_precision=config.fp16_precision,
         log_every_n_steps=config.method.log_every_n_steps,
         warmup_epochs=config.method.warmup_epochs,
+        profiler_config=OmegaConf.to_container(config.profiler) if hasattr(config, "profiler") else None,
     )
 
     logger.info("=" * 80)

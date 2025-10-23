@@ -13,6 +13,7 @@ from pathlib import Path
 import torch
 import torch.nn.functional as F
 from torch.cuda.amp import GradScaler, autocast
+from torch.profiler import ProfilerActivity, profile, schedule
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
@@ -48,6 +49,7 @@ class SimCLRTrainer:
         fp16_precision=True,
         log_every_n_steps=100,
         warmup_epochs=10,
+        profiler_config=None,
     ):
         self.model = model.to(device)
         self.optimizer = optimizer
@@ -57,6 +59,7 @@ class SimCLRTrainer:
         self.fp16_precision = fp16_precision
         self.log_every_n_steps = log_every_n_steps
         self.warmup_epochs = warmup_epochs
+        self.profiler_config = profiler_config or {}
 
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
@@ -118,6 +121,39 @@ class SimCLRTrainer:
         self.logger.info(f"Start SimCLR training for {epochs} epochs.")
         self.logger.info(f"Training on device: {self.device}")
 
+        # Setup profiler if enabled
+        profiler_enabled = self.profiler_config.get("enabled", False)
+        prof = None
+
+        if profiler_enabled:
+            self.logger.info("=" * 80)
+            self.logger.info("PyTorch Profiler ENABLED")
+            self.logger.info(f"Profiler config: {self.profiler_config}")
+            self.logger.info("=" * 80)
+
+            activities = [ProfilerActivity.CPU]
+            if self.device.type == "cuda":
+                activities.append(ProfilerActivity.CUDA)
+
+            profiler_schedule = schedule(
+                wait=self.profiler_config.get("wait", 1),
+                warmup=self.profiler_config.get("warmup", 1),
+                active=self.profiler_config.get("active", 3),
+                repeat=self.profiler_config.get("repeat", 2),
+            )
+
+            prof = profile(
+                activities=activities,
+                schedule=profiler_schedule,
+                on_trace_ready=torch.profiler.tensorboard_trace_handler(
+                    str(self.log_dir / "profiler")
+                ),
+                record_shapes=self.profiler_config.get("record_shapes", True),
+                profile_memory=self.profiler_config.get("profile_memory", True),
+                with_stack=self.profiler_config.get("with_stack", False),
+            )
+            prof.start()
+
         for epoch in range(epochs):
             self.model.train()
             epoch_loss = 0.0
@@ -167,6 +203,10 @@ class SimCLRTrainer:
                         }
                     )
 
+                # Step profiler after each batch
+                if prof is not None:
+                    prof.step()
+
                 n_iter += 1
 
             if epoch >= self.warmup_epochs:
@@ -194,6 +234,37 @@ class SimCLRTrainer:
             )
 
             self.logger.info(f"Checkpoint saved: {checkpoint_path}")
+
+        # Stop profiler and export results
+        if prof is not None:
+            prof.stop()
+
+            self.logger.info("=" * 80)
+            self.logger.info("Profiler Results")
+            self.logger.info("=" * 80)
+
+            # Export table summary
+            summary_path = self.log_dir / "profiler_summary.txt"
+            with open(summary_path, "w") as f:
+                f.write("=" * 80 + "\n")
+                f.write("PyTorch Profiler Summary\n")
+                f.write("=" * 80 + "\n\n")
+
+                f.write("Top 20 operations by CPU time:\n")
+                f.write("-" * 80 + "\n")
+                f.write(prof.key_averages().table(sort_by="cpu_time_total", row_limit=20))
+                f.write("\n\n")
+
+                if self.device.type == "cuda":
+                    f.write("Top 20 operations by CUDA time:\n")
+                    f.write("-" * 80 + "\n")
+                    f.write(prof.key_averages().table(sort_by="cuda_time_total", row_limit=20))
+                    f.write("\n\n")
+
+            self.logger.info(f"Profiler summary saved to: {summary_path}")
+            self.logger.info(f"TensorBoard traces saved to: {self.log_dir / 'profiler'}")
+            self.logger.info("View traces: tensorboard --logdir profiler/")
+            self.logger.info("=" * 80)
 
         self.logger.info("Training completed!")
         self.writer.close()
