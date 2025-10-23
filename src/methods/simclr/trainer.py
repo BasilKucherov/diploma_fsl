@@ -106,9 +106,35 @@ class SimCLRTrainer:
                 except Exception:
                     num_segments = -1
 
+                # Also check system RAM
+                try:
+                    with open("/proc/meminfo") as f:
+                        meminfo = f.read()
+                        for line in meminfo.split("\n"):
+                            if "MemAvailable" in line:
+                                mem_avail_kb = int(line.split()[1])
+                                mem_avail_gb = mem_avail_kb / (1024 * 1024)
+                                break
+                        else:
+                            mem_avail_gb = -1
+                except Exception:
+                    mem_avail_gb = -1
+
+                # Check GPU memory
+                gpu_mem_used_gb = -1
+                gpu_mem_total_gb = -1
+                if torch.cuda.is_available():
+                    try:
+                        gpu_mem_used_gb = torch.cuda.memory_allocated() / (1024**3)
+                        gpu_mem_total_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+                    except Exception:
+                        pass
+
                 self.logger.info(
-                    f"[SHM] Epoch {epoch:3d} | Used: {used:6d}MB ({used_pct:2d}%) | "
-                    f"Avail: {avail:6d}MB | Files: {num_files:4d} | Segments: {num_segments:5d}"
+                    f"[MEM] Epoch {epoch:3d} | SHM: {used:5d}MB | "
+                    f"RAM Avail: {mem_avail_gb:7.1f}GB | "
+                    f"GPU: {gpu_mem_used_gb:5.1f}/{gpu_mem_total_gb:5.1f}GB | "
+                    f"Segments: {num_segments:4d}"
                 )
         except Exception as e:
             self.logger.warning(f"Could not log shared memory usage: {e}")
@@ -285,6 +311,10 @@ class SimCLRTrainer:
 
             # Log shared memory usage for debugging
             self._log_shm_usage(epoch + 1)
+
+            # Clear GPU cache to prevent fragmentation
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
 
             checkpoint_dir = self.log_dir / "checkpoints"
             checkpoint_dir.mkdir(exist_ok=True)
