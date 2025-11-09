@@ -1,0 +1,6 @@
+[submodule "ssl/solo-learn"]
+	path = ssl/solo-learn
+	url = https://github.com/vturrisi/solo-learn.git
+[submodule "fsl/cdfsl-benchmark"]
+	path = fsl/cdfsl-benchmark
+	url = https://github.com/IBM/cdfsl-benchmark.git
