@@ -41,7 +41,7 @@ auto_resume:
 max_epochs: 200
 accelerator: "gpu"
 devices: [0]
-strategy: null
+strategy: auto
 sync_batchnorm: true
 precision: 16-mixed
 fast_dev_run: false

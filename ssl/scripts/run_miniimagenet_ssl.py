@@ -74,7 +74,7 @@ def build_command(
     if len(devices) > 1:
         hydra_overrides.append("strategy=ddp")
     else:
-        hydra_overrides.append("strategy=null")
+        hydra_overrides.append("strategy=auto")
 
     hydra_overrides.append(f"optimizer.batch_size={batch_size}")
 
