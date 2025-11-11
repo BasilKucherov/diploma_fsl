@@ -1,0 +1,51 @@
+defaults:
+  - _self_
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .
+
+seed: 42
+name: "ssl-miniimagenet"
+
+data:
+  dataset: "custom"
+  train_path: "/Users/vasili/repos/msu_diploma_2025/data/miniimagenet/train"
+  val_path: "/Users/vasili/repos/msu_diploma_2025/data/miniimagenet/val"
+  format: "image_folder"
+  num_workers: 8
+  no_labels: false
+
+optimizer:
+  name: "lars"
+  batch_size: 64
+  lr: 0.3
+  classifier_lr: 0.1
+  weight_decay: 1.0e-4
+
+scheduler:
+  name: "warmup_cosine"
+  warmup_epochs: 10
+  max_epochs: 200
+
+checkpoint:
+  enabled: true
+  dir: "/Users/vasili/repos/msu_diploma_2025/runs/ssl/checkpoints"
+  frequency: 1
+  keep_prev: true
+
+auto_resume:
+  enabled: true
+  max_hours: 72
+
+max_epochs: 200
+accelerator: "gpu"
+devices: [0]
+strategy: null
+sync_batchnorm: true
+precision: 16-mixed
+
+performance:
+  disable_channel_last: false
+

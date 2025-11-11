@@ -1,0 +1,37 @@
+defaults:
+  - base
+  - augmentations: asymmetric_84
+  - wandb: off
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+name: "byol-miniimagenet"
+method: "byol"
+backbone:
+  name: "resnet18"
+
+method_kwargs:
+  proj_hidden_dim: 4096
+  proj_output_dim: 256
+  pred_hidden_dim: 8192
+
+momentum:
+  base_tau: 0.99
+  final_tau: 1.0
+
+optimizer:
+  name: "lars"
+  batch_size: 64
+  lr: 0.5
+  classifier_lr: 0.1
+  weight_decay: 1.0e-6
+  kwargs:
+    clip_lr: true
+    eta: 0.02
+    exclude_bias_n_norm: true
+
+scheduler:
+  name: "warmup_cosine"
+  warmup_epochs: 10
+  max_epochs: 200
+

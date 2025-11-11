@@ -1,0 +1,34 @@
+defaults:
+  - base
+  - augmentations: symmetric_84
+  - wandb: off
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+name: "mocov2plus-miniimagenet"
+method: "mocov2plus"
+backbone:
+  name: "resnet18"
+
+method_kwargs:
+  proj_hidden_dim: 2048
+  proj_output_dim: 256
+  queue_size: 65536
+  temperature: 0.2
+
+momentum:
+  base_tau: 0.99
+  final_tau: 0.999
+
+optimizer:
+  name: "sgd"
+  batch_size: 64
+  lr: 0.3
+  classifier_lr: 0.3
+  weight_decay: 1.0e-4
+
+scheduler:
+  name: "warmup_cosine"
+  warmup_epochs: 10
+  max_epochs: 200
+

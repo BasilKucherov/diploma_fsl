@@ -1,0 +1,40 @@
+defaults:
+  - base
+  - augmentations: symmetric_84
+  - wandb: off
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+name: "swav-miniimagenet"
+method: "swav"
+backbone:
+  name: "resnet18"
+
+method_kwargs:
+  proj_hidden_dim: 2048
+  proj_output_dim: 128
+  num_prototypes: 3000
+  queue_size: 3840
+  epoch_queue_starts: 25
+  freeze_prototypes_epochs: 2
+  temperature: 0.1
+
+swav:
+  enable_multicrop: false
+
+optimizer:
+  name: "lars"
+  batch_size: 64
+  lr: 0.6
+  classifier_lr: 0.1
+  weight_decay: 1.0e-6
+  kwargs:
+    clip_lr: true
+    eta: 0.02
+    exclude_bias_n_norm: true
+
+scheduler:
+  name: "warmup_cosine"
+  warmup_epochs: 10
+  max_epochs: 200
+
