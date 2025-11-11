@@ -1,6 +1,6 @@
 defaults:
   - base: default
-  - augmentations: symmetric_84
+  - augmentations: swav_multicrop_96
   - wandb: "off"
   - override hydra/hydra_logging: "disabled"
   - override hydra/job_logging: "disabled"
@@ -14,18 +14,15 @@ backbone:
 method_kwargs:
   proj_hidden_dim: 2048
   proj_output_dim: 128
-  num_prototypes: 3000
-  queue_size: 3840
-  epoch_queue_starts: 25
+  num_prototypes: 512
+  queue_size: 4096
+  epoch_queue_starts: 15
   freeze_prototypes_epochs: 2
   temperature: 0.1
 
-swav:
-  enable_multicrop: false
-
 optimizer:
   name: "lars"
-  batch_size: 64
+  batch_size: 128
   lr: 0.6
   classifier_lr: 0.1
   weight_decay: 1.0e-6

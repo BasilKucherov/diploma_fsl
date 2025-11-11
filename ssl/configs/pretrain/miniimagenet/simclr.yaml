@@ -1,6 +1,6 @@
 defaults:
   - base: default
-  - augmentations: symmetric_84
+  - augmentations: symmetric_96
   - wandb: "off"
   - override hydra/hydra_logging: "disabled"
   - override hydra/job_logging: "disabled"
@@ -12,16 +12,16 @@ backbone:
   name: "resnet18"
 
 method_kwargs:
-  proj_hidden_dim: 4096
-  proj_output_dim: 512
-  temperature: 0.2
+  proj_hidden_dim: 2048
+  proj_output_dim: 128
+  temperature: 0.1
 
 optimizer:
   name: "lars"
-  batch_size: 64
+  batch_size: 128
   lr: 0.3
   classifier_lr: 0.1
-  weight_decay: 1.0e-4
+  weight_decay: 1.0e-6
   kwargs:
     clip_lr: true
     eta: 0.02

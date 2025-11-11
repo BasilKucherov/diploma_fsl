@@ -48,7 +48,7 @@ def build_command(
     devices: Iterable[int],
     batch_size: int,
     fast_dev_run: bool,
-    multicrop: bool,
+    disable_multicrop: bool,
     extra_overrides: Iterable[str],
 ) -> list[str]:
     devices = list(devices)
@@ -78,9 +78,8 @@ def build_command(
 
     hydra_overrides.append(f"optimizer.batch_size={batch_size}")
 
-    if method == "swav" and multicrop:
-        hydra_overrides.append("augmentations=swav_multicrop_84")
-        hydra_overrides.append("swav.enable_multicrop=true")
+    if method == "swav" and disable_multicrop:
+        hydra_overrides.append("augmentations=symmetric_96")
 
     if fast_dev_run:
         hydra_overrides.append("fast_dev_run=true")
@@ -108,13 +107,13 @@ def main() -> None:
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=64,
+        default=128,
         help="Per-device batch size (global batch = batch_size * num_gpus).",
     )
     parser.add_argument(
-        "--multicrop",
+        "--no-multicrop",
         action="store_true",
-        help="Enable SwAV multi-crop (adds 6×96 crops). Only applicable when --method swav.",
+        help="Disable SwAV multi-crop (default config uses 2×96 + 6×48 crops). Only for --method swav.",
     )
     parser.add_argument(
         "--fast-dev-run",
@@ -135,8 +134,8 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    if args.method != "swav" and args.multicrop:
-        parser.error("--multicrop is only supported for --method swav")
+    if args.method != "swav" and args.no_multicrop:
+        parser.error("--no-multicrop is only supported for --method swav")
 
     extra_overrides = shlex.split(args.extra) if args.extra else []
     command = build_command(
@@ -144,7 +143,7 @@ def main() -> None:
         devices=args.gpus,
         batch_size=args.batch_size,
         fast_dev_run=args.fast_dev_run,
-        multicrop=args.multicrop,
+        disable_multicrop=args.no_multicrop,
         extra_overrides=extra_overrides,
     )
 

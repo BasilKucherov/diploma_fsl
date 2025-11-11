@@ -1,6 +1,6 @@
 defaults:
   - base: default
-  - augmentations: symmetric_84
+  - augmentations: symmetric_96
   - wandb: "off"
   - override hydra/hydra_logging: "disabled"
   - override hydra/job_logging: "disabled"
@@ -13,18 +13,18 @@ backbone:
 
 method_kwargs:
   proj_hidden_dim: 2048
-  proj_output_dim: 256
+  proj_output_dim: 128
   queue_size: 65536
   temperature: 0.2
 
 momentum:
-  base_tau: 0.99
+  base_tau: 0.999
   final_tau: 0.999
 
 optimizer:
   name: "sgd"
-  batch_size: 64
-  lr: 0.3
+  batch_size: 128
+  lr: 0.03
   classifier_lr: 0.3
   weight_decay: 1.0e-4
 

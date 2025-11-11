@@ -1,6 +1,6 @@
 defaults:
   - base: default
-  - augmentations: asymmetric_84
+  - augmentations: asymmetric_96
   - wandb: "off"
   - override hydra/hydra_logging: "disabled"
   - override hydra/job_logging: "disabled"
@@ -17,15 +17,15 @@ method_kwargs:
   pred_hidden_dim: 8192
 
 momentum:
-  base_tau: 0.99
+  base_tau: 0.996
   final_tau: 1.0
 
 optimizer:
   name: "lars"
-  batch_size: 64
-  lr: 0.5
+  batch_size: 128
+  lr: 0.2
   classifier_lr: 0.1
-  weight_decay: 1.0e-6
+  weight_decay: 1.5e-6
   kwargs:
     clip_lr: true
     eta: 0.02
