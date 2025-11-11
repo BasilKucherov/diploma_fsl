@@ -1,3 +1,5 @@
+# @package _global_
+
 hydra:
   output_subdir: null
   run:
@@ -42,6 +44,7 @@ devices: [0]
 strategy: null
 sync_batchnorm: true
 precision: 16-mixed
+fast_dev_run: false
 
 performance:
   disable_channel_last: false
