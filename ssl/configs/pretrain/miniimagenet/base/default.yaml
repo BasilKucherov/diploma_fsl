@@ -1,6 +1,3 @@
-defaults:
-  - _self_
-
 hydra:
   output_subdir: null
   run:
@@ -11,8 +8,8 @@ name: "ssl-miniimagenet"
 
 data:
   dataset: "custom"
-  train_path: "/Users/vasili/repos/msu_diploma_2025/data/miniimagenet/train"
-  val_path: "/Users/vasili/repos/msu_diploma_2025/data/miniimagenet/val"
+  train_path: ${oc.env:MINIIMAGENET_TRAIN,${hydra:runtime.cwd}/data/miniimagenet/train}
+  val_path: ${oc.env:MINIIMAGENET_VAL,${hydra:runtime.cwd}/data/miniimagenet/val}
   format: "image_folder"
   num_workers: 8
   no_labels: false
@@ -31,7 +28,7 @@ scheduler:
 
 checkpoint:
   enabled: true
-  dir: "/Users/vasili/repos/msu_diploma_2025/runs/ssl/checkpoints"
+  dir: ${oc.env:SSL_CHECKPOINT_ROOT,${hydra:runtime.cwd}/runs/ssl/checkpoints}
   frequency: 1
   keep_prev: true
 

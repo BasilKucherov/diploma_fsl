@@ -1,5 +1,5 @@
 defaults:
-  - base
+  - base: default
   - augmentations: asymmetric_84
   - wandb: off
   - override hydra/hydra_logging: disabled
