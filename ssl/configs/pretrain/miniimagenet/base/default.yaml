@@ -49,3 +49,5 @@ fast_dev_run: false
 performance:
   disable_channel_last: false
 
+log_every_n_steps: 50
+
