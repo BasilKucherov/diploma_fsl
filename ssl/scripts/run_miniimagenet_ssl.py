@@ -12,7 +12,6 @@ import argparse
 import shlex
 import subprocess
 import sys
-from collections.abc import Iterable
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -45,11 +44,14 @@ def parse_devices(spec: str) -> list[int]:
 
 def build_command(
     method: str,
-    devices: Iterable[int],
+    devices: list[int],
     batch_size: int,
     fast_dev_run: bool,
     disable_multicrop: bool,
-    extra_overrides: Iterable[str],
+    data_backend: str,
+    dali_device: str,
+    dali_encode_indexes: bool,
+    extra_overrides: list[str],
 ) -> list[str]:
     devices = list(devices)
     main_py = SOLO_ROOT / "main_pretrain.py"
@@ -80,6 +82,14 @@ def build_command(
 
     if method == "swav" and disable_multicrop:
         hydra_overrides.append("augmentations=symmetric_96")
+
+    if data_backend == "dali":
+        hydra_overrides.append("base=dali")
+        hydra_overrides.append(f"dali.device={dali_device}")
+        if dali_encode_indexes:
+            hydra_overrides.append("dali.encode_indexes_into_labels=true")
+    elif data_backend != "image_folder":
+        raise ValueError(f"Unsupported data backend '{data_backend}'")
 
     if fast_dev_run:
         hydra_overrides.append("fast_dev_run=true")
@@ -113,12 +123,29 @@ def main() -> None:
     parser.add_argument(
         "--no-multicrop",
         action="store_true",
-        help="Disable SwAV multi-crop (default config uses 2×96 + 6×48 crops). Only for --method swav.",
+        help="Disable SwAV multi-crop (default config uses 2x96 + 6x48 crops). Only for --method swav.",
     )
     parser.add_argument(
         "--fast-dev-run",
         action="store_true",
         help="Append fast_dev_run=true for smoke tests.",
+    )
+    parser.add_argument(
+        "--data-backend",
+        choices=("image_folder", "dali"),
+        default="image_folder",
+        help="Select the data loading backend. Use 'dali' after installing NVIDIA DALI.",
+    )
+    parser.add_argument(
+        "--dali-device",
+        choices=("gpu", "cpu"),
+        default="gpu",
+        help="Device type for NVIDIA DALI operators (only used when --data-backend=dali).",
+    )
+    parser.add_argument(
+        "--dali-encode-indexes",
+        action="store_true",
+        help="Enable encode_indexes_into_labels in the DALI pipeline (indices stored in labels).",
     )
     parser.add_argument(
         "--extra",
@@ -144,6 +171,9 @@ def main() -> None:
         batch_size=args.batch_size,
         fast_dev_run=args.fast_dev_run,
         disable_multicrop=args.no_multicrop,
+        data_backend=args.data_backend,
+        dali_device=args.dali_device,
+        dali_encode_indexes=args.dali_encode_indexes,
         extra_overrides=extra_overrides,
     )
 

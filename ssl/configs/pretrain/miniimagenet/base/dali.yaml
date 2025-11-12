@@ -1,0 +1,14 @@
+# @package _global_
+
+defaults:
+  - default
+
+data:
+  format: "dali"
+  num_workers: 4
+
+dali:
+  device: "gpu"
+  encode_indexes_into_labels: false
+
+
