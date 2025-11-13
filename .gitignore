@@ -18,3 +18,7 @@ __pycache__/
 
 # Project
 pyproject.toml
+data/
+runs/
+analysis/features/
+lightning_logs/
