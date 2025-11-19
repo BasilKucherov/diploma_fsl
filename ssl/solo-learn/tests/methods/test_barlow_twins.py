@@ -18,9 +18,9 @@
 # DEALINGS IN THE SOFTWARE.
 
 import torch
-
 from solo.methods import BarlowTwins
-from .utils import gen_batch, gen_trainer, prepare_dummy_dataloaders, gen_base_cfg
+
+from .utils import gen_base_cfg, gen_batch, gen_trainer, prepare_dummy_dataloaders
 
 
 def test_barlow():

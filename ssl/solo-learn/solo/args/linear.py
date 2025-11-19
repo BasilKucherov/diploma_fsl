@@ -2,11 +2,12 @@ import os
 
 import omegaconf
 from omegaconf import OmegaConf
+from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+
 from solo.methods.base import BaseMethod
 from solo.utils.auto_resumer import AutoResumer
 from solo.utils.checkpointer import Checkpointer
 from solo.utils.misc import omegaconf_select
-from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 try:
     from solo.data.dali_dataloader import ClassificationDALIDataModule

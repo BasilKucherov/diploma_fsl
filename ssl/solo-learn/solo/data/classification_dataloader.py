@@ -185,7 +185,14 @@ def prepare_datasets(
         sandbox_folder = Path(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
         val_data_path = sandbox_folder / "datasets"
 
-    assert dataset in ["cifar10", "cifar100", "stl10", "imagenet", "imagenet100", "custom"]
+    assert dataset in [
+        "cifar10",
+        "cifar100",
+        "stl10",
+        "imagenet",
+        "imagenet100",
+        "custom",
+    ]
 
     if dataset in ["cifar10", "cifar100"]:
         DatasetClass = vars(torchvision.datasets)[dataset.upper()]
@@ -243,7 +250,10 @@ def prepare_datasets(
 
 
 def prepare_dataloaders(
-    train_dataset: Dataset, val_dataset: Dataset, batch_size: int = 64, num_workers: int = 4
+    train_dataset: Dataset,
+    val_dataset: Dataset,
+    batch_size: int = 64,
+    num_workers: int = 4,
 ) -> Tuple[DataLoader, DataLoader]:
     """Wraps a train and a validation dataset with a DataLoader.
 

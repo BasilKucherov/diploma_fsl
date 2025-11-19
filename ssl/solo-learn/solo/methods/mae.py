@@ -22,15 +22,23 @@ from typing import Any, Dict, List, Sequence
 import omegaconf
 import torch
 import torch.nn as nn
+from timm.models.vision_transformer import Block
+
 from solo.losses.mae import mae_loss_func
 from solo.methods.base import BaseMethod
 from solo.utils.misc import generate_2d_sincos_pos_embed, omegaconf_select
-from timm.models.vision_transformer import Block
 
 
 class MAEDecoder(nn.Module):
     def __init__(
-        self, in_dim, embed_dim, depth, num_heads, num_patches, patch_size, mlp_ratio=4.0
+        self,
+        in_dim,
+        embed_dim,
+        depth,
+        num_heads,
+        num_patches,
+        patch_size,
+        mlp_ratio=4.0,
     ) -> None:
         super().__init__()
 

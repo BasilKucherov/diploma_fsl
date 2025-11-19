@@ -28,7 +28,12 @@ from timm.models.registry import register_model
 
 class WideResnetBasicBlock(nn.Module):
     def __init__(
-        self, in_planes, out_planes, stride, drop_rate=0.0, activate_before_residual=False
+        self,
+        in_planes,
+        out_planes,
+        stride,
+        drop_rate=0.0,
+        activate_before_residual=False,
     ):
         super().__init__()
         self.bn1 = nn.BatchNorm2d(in_planes, momentum=0.001, eps=0.001)
@@ -45,7 +50,14 @@ class WideResnetBasicBlock(nn.Module):
         self.equalInOut = in_planes == out_planes
         self.convShortcut = (
             (not self.equalInOut)
-            and nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, padding=0, bias=True)
+            and nn.Conv2d(
+                in_planes,
+                out_planes,
+                kernel_size=1,
+                stride=stride,
+                padding=0,
+                bias=True,
+            )
             or None
         )
         self.activate_before_residual = activate_before_residual
@@ -75,11 +87,24 @@ class WideResnetNetworkBlock(nn.Module):
     ):
         super().__init__()
         self.layer = self._make_layer(
-            block, in_planes, out_planes, nb_layers, stride, drop_rate, activate_before_residual
+            block,
+            in_planes,
+            out_planes,
+            nb_layers,
+            stride,
+            drop_rate,
+            activate_before_residual,
         )
 
     def _make_layer(
-        self, block, in_planes, out_planes, nb_layers, stride, drop_rate, activate_before_residual
+        self,
+        block,
+        in_planes,
+        out_planes,
+        nb_layers,
+        stride,
+        drop_rate,
+        activate_before_residual,
     ):
         layers = []
         for i in range(int(nb_layers)):

@@ -28,7 +28,9 @@ from lightning.pytorch.loggers.wandb import WandbLogger
 from lightning.pytorch.strategies.ddp import DDPStrategy
 from omegaconf import DictConfig, OmegaConf
 from solo.args.pretrain import parse_cfg
-from solo.data.classification_dataloader import prepare_data as prepare_data_classification
+from solo.data.classification_dataloader import (
+    prepare_data as prepare_data_classification,
+)
 from solo.data.pretrain_dataloader import (
     FullTransformPipeline,
     NCropAugmentation,
@@ -42,7 +44,10 @@ from solo.utils.checkpointer import Checkpointer
 from solo.utils.misc import make_contiguous, omegaconf_select
 
 try:
-    from solo.data.dali_dataloader import PretrainDALIDataModule, build_transform_pipeline_dali
+    from solo.data.dali_dataloader import (
+        PretrainDALIDataModule,
+        build_transform_pipeline_dali,
+    )
 except ImportError:
     _dali_avaliable = False
 else:
@@ -133,7 +138,8 @@ def main(cfg: DictConfig):
         for aug_cfg in cfg.augmentations:
             pipelines.append(
                 NCropAugmentation(
-                    build_transform_pipeline(cfg.data.dataset, aug_cfg), aug_cfg.num_crops
+                    build_transform_pipeline(cfg.data.dataset, aug_cfg),
+                    aug_cfg.num_crops,
                 )
             )
         transform = FullTransformPipeline(pipelines)
@@ -151,7 +157,9 @@ def main(cfg: DictConfig):
             data_fraction=cfg.data.fraction,
         )
         train_loader = prepare_dataloader(
-            train_dataset, batch_size=cfg.optimizer.batch_size, num_workers=cfg.data.num_workers
+            train_dataset,
+            batch_size=cfg.optimizer.batch_size,
+            num_workers=cfg.data.num_workers,
         )
 
     # 1.7 will deprecate resume_from_checkpoint, but for the moment
@@ -221,9 +229,9 @@ def main(cfg: DictConfig):
             "logger": wandb_logger if cfg.wandb.enabled else None,
             "callbacks": callbacks,
             "enable_checkpointing": False,
-            "strategy": DDPStrategy(find_unused_parameters=False)
-            if cfg.strategy == "ddp"
-            else cfg.strategy,
+            "strategy": (
+                DDPStrategy(find_unused_parameters=False) if cfg.strategy == "ddp" else cfg.strategy
+            ),
         }
     )
     trainer = Trainer(**trainer_kwargs)

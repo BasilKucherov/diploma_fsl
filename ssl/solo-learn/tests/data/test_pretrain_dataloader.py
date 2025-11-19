@@ -18,6 +18,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 import numpy as np
+from omegaconf import OmegaConf
 from PIL import Image
 from solo.data.pretrain_dataloader import (
     FullTransformPipeline,
@@ -29,7 +30,6 @@ from solo.data.pretrain_dataloader import (
 )
 from torch.utils.data import DataLoader
 from torchvision.datasets.cifar import CIFAR10
-from omegaconf import OmegaConf
 
 
 def test_transforms():

@@ -22,7 +22,6 @@ import os
 from pathlib import Path
 
 from omegaconf import OmegaConf
-
 from solo.args.umap import parse_args_umap
 from solo.data.classification_dataloader import prepare_data
 from solo.methods import METHODS

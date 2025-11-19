@@ -29,9 +29,6 @@ from lightning.pytorch.callbacks import LearningRateMonitor
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.strategies.ddp import DDPStrategy
 from omegaconf import DictConfig, OmegaConf
-from timm.data.mixup import Mixup
-from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
-
 from solo.args.linear import parse_cfg
 from solo.data.classification_dataloader import prepare_data
 from solo.methods.base import BaseMethod
@@ -39,6 +36,8 @@ from solo.methods.linear import LinearModel
 from solo.utils.auto_resumer import AutoResumer
 from solo.utils.checkpointer import Checkpointer
 from solo.utils.misc import make_contiguous
+from timm.data.mixup import Mixup
+from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 
 try:
     from solo.data.dali_dataloader import ClassificationDALIDataModule
@@ -203,9 +202,9 @@ def main(cfg: DictConfig):
             "logger": wandb_logger if cfg.wandb.enabled else None,
             "callbacks": callbacks,
             "enable_checkpointing": False,
-            "strategy": DDPStrategy(find_unused_parameters=False)
-            if cfg.strategy == "ddp"
-            else cfg.strategy,
+            "strategy": (
+                DDPStrategy(find_unused_parameters=False) if cfg.strategy == "ddp" else cfg.strategy
+            ),
         }
     )
     trainer = Trainer(**trainer_kwargs)

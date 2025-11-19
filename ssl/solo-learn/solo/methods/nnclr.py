@@ -23,6 +23,7 @@ import omegaconf
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from solo.losses.nnclr import nnclr_loss_func
 from solo.methods.base import BaseMethod
 from solo.utils.misc import gather, omegaconf_select

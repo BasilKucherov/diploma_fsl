@@ -22,6 +22,7 @@ from typing import Any, Dict, List, Sequence
 import omegaconf
 import torch
 import torch.nn as nn
+
 from solo.losses.vicreg import vicreg_loss_func
 from solo.methods.base import BaseMethod
 from solo.utils.misc import omegaconf_select

@@ -24,6 +24,7 @@ import omegaconf
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from solo.losses.nnclr import nnclr_loss_func
 from solo.methods.base import BaseMomentumMethod
 from solo.utils.misc import gather, omegaconf_select
@@ -279,7 +280,8 @@ class All4One(BaseMomentumMethod):
             pickle.dump(img_indexes.cpu().numpy(), f)
 
         with open(
-            f"NNIDX/FirstNN/{self.current_epoch}__{self.global_step}__Labels.pickle", "wb"
+            f"NNIDX/FirstNN/{self.current_epoch}__{self.global_step}__Labels.pickle",
+            "wb",
         ) as f:
             pickle.dump(nn1_lb.cpu().numpy(), f)
 

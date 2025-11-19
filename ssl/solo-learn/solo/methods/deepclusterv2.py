@@ -23,6 +23,7 @@ import omegaconf
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from solo.losses.deepclusterv2 import deepclusterv2_loss_func
 from solo.methods.base import BaseMethod
 from solo.utils.kmeans import KMeans
@@ -166,7 +167,10 @@ class DeepClusterV2(BaseMethod):
             batch_idx (int): batch index relative to the current epoch.
         """
 
-        start_idx, end_idx = batch_idx * self.batch_size, (batch_idx + 1) * self.batch_size
+        start_idx, end_idx = (
+            batch_idx * self.batch_size,
+            (batch_idx + 1) * self.batch_size,
+        )
         self.local_memory_index[start_idx:end_idx] = idxs
         for c, z_c in enumerate(z):
             self.local_memory_embeddings[c][start_idx:end_idx] = z_c.detach()

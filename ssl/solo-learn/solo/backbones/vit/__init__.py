@@ -19,20 +19,18 @@
 
 import logging
 
-from .vit import vit_tiny as default_vit_tiny
-from .vit import vit_small as default_vit_small
 from .vit import vit_base as default_vit_base
 from .vit import vit_large as default_vit_large
-
-from .vit_mocov3 import vit_tiny as mocov3_vit_tiny
-from .vit_mocov3 import vit_small as mocov3_vit_small
-from .vit_mocov3 import vit_base as mocov3_vit_base
-from .vit_mocov3 import vit_large as mocov3_vit_large
-
-from .vit_mae import vit_tiny as mae_vit_tiny
-from .vit_mae import vit_small as mae_vit_small
+from .vit import vit_small as default_vit_small
+from .vit import vit_tiny as default_vit_tiny
 from .vit_mae import vit_base as mae_vit_base
 from .vit_mae import vit_large as mae_vit_large
+from .vit_mae import vit_small as mae_vit_small
+from .vit_mae import vit_tiny as mae_vit_tiny
+from .vit_mocov3 import vit_base as mocov3_vit_base
+from .vit_mocov3 import vit_large as mocov3_vit_large
+from .vit_mocov3 import vit_small as mocov3_vit_small
+from .vit_mocov3 import vit_tiny as mocov3_vit_tiny
 
 
 def get_constructor(method, options, default):

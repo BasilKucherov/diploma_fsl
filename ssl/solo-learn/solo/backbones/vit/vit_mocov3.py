@@ -76,7 +76,8 @@ class VisionTransformerMoCo(VisionTransformer):
         out_w = torch.einsum("m,d->md", [grid_w.flatten(), omega])
         out_h = torch.einsum("m,d->md", [grid_h.flatten(), omega])
         pos_emb = torch.cat(
-            [torch.sin(out_w), torch.cos(out_w), torch.sin(out_h), torch.cos(out_h)], dim=1
+            [torch.sin(out_w), torch.cos(out_w), torch.sin(out_h), torch.cos(out_h)],
+            dim=1,
         )[None, :, :]
 
         assert self.num_prefix_tokens == 1, "Assuming one and only one token, [cls]"

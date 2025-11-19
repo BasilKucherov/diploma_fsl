@@ -2,6 +2,7 @@ import os
 
 import omegaconf
 from omegaconf import OmegaConf
+
 from solo.utils.auto_resumer import AutoResumer
 from solo.utils.checkpointer import Checkpointer
 from solo.utils.misc import omegaconf_select

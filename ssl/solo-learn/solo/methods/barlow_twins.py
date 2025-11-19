@@ -22,6 +22,7 @@ from typing import Any, List, Sequence
 import omegaconf
 import torch
 import torch.nn as nn
+
 from solo.losses.barlow import barlow_loss_func
 from solo.methods.base import BaseMethod
 from solo.utils.misc import omegaconf_select

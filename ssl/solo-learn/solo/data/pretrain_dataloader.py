@@ -212,7 +212,8 @@ def build_transform_pipeline(dataset, cfg):
     }
 
     mean, std = MEANS_N_STD.get(
-        dataset, (cfg.get("mean", IMAGENET_DEFAULT_MEAN), cfg.get("std", IMAGENET_DEFAULT_STD))
+        dataset,
+        (cfg.get("mean", IMAGENET_DEFAULT_MEAN), cfg.get("std", IMAGENET_DEFAULT_STD)),
     )
 
     augmentations = []
@@ -366,7 +367,11 @@ def prepare_datasets(
             files = [f for f, _ in data]
             labels = [l for _, l in data]
             files, _, labels, _ = train_test_split(
-                files, labels, train_size=data_fraction, stratify=labels, random_state=42
+                files,
+                labels,
+                train_size=data_fraction,
+                stratify=labels,
+                random_state=42,
             )
             train_dataset.samples = [tuple(p) for p in zip(files, labels)]
 

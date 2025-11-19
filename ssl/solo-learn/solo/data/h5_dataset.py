@@ -19,8 +19,8 @@
 
 
 import io
-import os
 import logging
+import os
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -89,7 +89,8 @@ class H5Dataset(Dataset):
     def _load_h5_data_info(self):
         self._data = []
         h5_data_info_file = os.path.join(
-            os.path.expanduser("~"), os.path.basename(os.path.splitext(self.h5_path)[0]) + ".txt"
+            os.path.expanduser("~"),
+            os.path.basename(os.path.splitext(self.h5_path)[0]) + ".txt",
         )
         if not os.path.isfile(h5_data_info_file):
             temp_h5_file = h5py.File(self.h5_path, "r")

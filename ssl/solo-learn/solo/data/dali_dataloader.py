@@ -29,7 +29,7 @@ import omegaconf
 import torch
 import torch.nn as nn
 from nvidia.dali import pipeline_def
-from nvidia.dali.plugin.pytorch import DALIGenericIterator, LastBatchPolicy
+from nvidia.dali.plugin.pytorch import LastBatchPolicy
 from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 from solo.data.temp_dali_fix import TempDALIGenericIterator
@@ -120,9 +120,9 @@ class RandomColorJitter:
         if do_op:
             out = self.color(
                 images,
-                brightness=self.brightness() if callable(self.brightness) else self.brightness,
+                brightness=(self.brightness() if callable(self.brightness) else self.brightness),
                 contrast=self.contrast() if callable(self.contrast) else self.contrast,
-                saturation=self.saturation() if callable(self.saturation) else self.saturation,
+                saturation=(self.saturation() if callable(self.saturation) else self.saturation),
                 hue=self.hue() if callable(self.hue) else self.hue,
             )
         else:
@@ -241,7 +241,11 @@ class NormalPipelineBuilder:
             from sklearn.model_selection import train_test_split
 
             files, _, labels, _ = train_test_split(
-                files, labels, train_size=data_fraction, stratify=labels, random_state=42
+                files,
+                labels,
+                train_size=data_fraction,
+                stratify=labels,
+                random_state=42,
             )
 
         self.reader = ops.readers.File(
@@ -368,7 +372,8 @@ def build_transform_pipeline_dali(dataset, cfg, dali_device):
     }
 
     mean, std = MEANS_N_STD.get(
-        dataset, (cfg.get("mean", IMAGENET_DEFAULT_MEAN), cfg.get("std", IMAGENET_DEFAULT_STD))
+        dataset,
+        (cfg.get("mean", IMAGENET_DEFAULT_MEAN), cfg.get("std", IMAGENET_DEFAULT_STD)),
     )
 
     augmentations = []
@@ -527,7 +532,11 @@ class PretrainPipelineBuilder:
             from sklearn.model_selection import train_test_split
 
             files, _, labels, _ = train_test_split(
-                files, labels, train_size=data_fraction, stratify=labels, random_state=42
+                files,
+                labels,
+                train_size=data_fraction,
+                stratify=labels,
+                random_state=42,
             )
             self.reader = ops.readers.File(
                 files=files,

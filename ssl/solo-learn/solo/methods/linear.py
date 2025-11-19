@@ -265,7 +265,7 @@ class LinearModel(pl.LightningModule):
                     optimizer,
                     warmup_epochs=max_warmup_steps,
                     max_epochs=max_scheduler_steps,
-                    warmup_start_lr=self.warmup_start_lr if self.warmup_epochs > 0 else self.lr,
+                    warmup_start_lr=(self.warmup_start_lr if self.warmup_epochs > 0 else self.lr),
                     eta_min=self.min_lr,
                 ),
                 "interval": self.scheduler_interval,

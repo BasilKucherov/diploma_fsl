@@ -375,7 +375,7 @@ class BaseMethod(pl.LightningModule):
                     optimizer,
                     warmup_epochs=max_warmup_steps,
                     max_epochs=max_scheduler_steps,
-                    warmup_start_lr=self.warmup_start_lr if self.warmup_epochs > 0 else self.lr,
+                    warmup_start_lr=(self.warmup_start_lr if self.warmup_epochs > 0 else self.lr),
                     eta_min=self.min_lr,
                 ),
                 "interval": self.scheduler_interval,
@@ -389,9 +389,11 @@ class BaseMethod(pl.LightningModule):
         if idxs_no_scheduler:
             partial_fn = partial(
                 static_lr,
-                get_lr=scheduler["scheduler"].get_lr
-                if isinstance(scheduler, dict)
-                else scheduler.get_lr,
+                get_lr=(
+                    scheduler["scheduler"].get_lr
+                    if isinstance(scheduler, dict)
+                    else scheduler.get_lr
+                ),
                 param_group_indexes=idxs_no_scheduler,
                 lrs_to_replace=[self.lr] * len(idxs_no_scheduler),
             )

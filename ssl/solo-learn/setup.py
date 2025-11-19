@@ -21,7 +21,12 @@ import os
 from pkg_resources import parse_requirements
 from setuptools import find_packages, setup
 
-KW = ["artificial intelligence", "deep learning", "unsupervised learning", "contrastive learning"]
+KW = [
+    "artificial intelligence",
+    "deep learning",
+    "unsupervised learning",
+    "contrastive learning",
+]
 
 REQUIREMENTS_FILE = os.path.join(os.path.dirname(__file__), "requirements.txt")
 with open(REQUIREMENTS_FILE) as fo:

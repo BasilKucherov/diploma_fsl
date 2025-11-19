@@ -23,6 +23,7 @@ import omegaconf
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from solo.losses.swav import swav_loss_func
 from solo.methods.base import BaseMethod
 from solo.utils.misc import omegaconf_select

@@ -25,7 +25,7 @@ import os
 import torch
 import torch.nn as nn
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
-from timm.models.layers import DropPath, trunc_normal_, to_2tuple
+from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 from timm.models.registry import register_model
 
 
@@ -58,7 +58,13 @@ class PatchEmbed(nn.Module):
     """
 
     def __init__(
-        self, patch_size=16, stride=16, padding=0, in_chans=3, embed_dim=768, norm_layer=None
+        self,
+        patch_size=16,
+        stride=16,
+        padding=0,
+        in_chans=3,
+        embed_dim=768,
+        norm_layer=None,
     ):
         super().__init__()
         patch_size = to_2tuple(patch_size)
@@ -128,7 +134,12 @@ class Mlp(nn.Module):
     """
 
     def __init__(
-        self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.0
+        self,
+        in_features,
+        hidden_features=None,
+        out_features=None,
+        act_layer=nn.GELU,
+        drop=0.0,
     ):
         super().__init__()
         out_features = out_features or in_features
@@ -188,7 +199,10 @@ class PoolFormerBlock(nn.Module):
         self.norm2 = norm_layer(dim)
         mlp_hidden_dim = int(dim * mlp_ratio)
         self.mlp = Mlp(
-            in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop
+            in_features=dim,
+            hidden_features=mlp_hidden_dim,
+            act_layer=act_layer,
+            drop=drop,
         )
 
         # The following two techniques are useful to train deep PoolFormers.

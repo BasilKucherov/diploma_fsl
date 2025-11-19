@@ -1,4 +1,3 @@
-from argparse import ArgumentParser
 import json
 import os
 from collections import namedtuple
@@ -7,6 +6,7 @@ from pathlib import Path
 from typing import Union
 
 from omegaconf import DictConfig
+
 from solo.utils.misc import omegaconf_select
 
 Checkpoint = namedtuple("Checkpoint", ["creation_time", "args", "checkpoint"])

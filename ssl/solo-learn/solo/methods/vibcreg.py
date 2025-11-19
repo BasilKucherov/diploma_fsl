@@ -22,6 +22,7 @@ from typing import Any, Dict, List, Sequence
 import omegaconf
 import torch
 import torch.nn as nn
+
 from solo.losses.vibcreg import vibcreg_loss_func
 from solo.methods.base import BaseMethod
 from solo.utils.misc import omegaconf_select
@@ -61,7 +62,7 @@ class VIbCReg(BaseMethod):
             nn.BatchNorm1d(proj_hidden_dim),
             nn.GELU(),
             nn.Linear(proj_hidden_dim, proj_output_dim),
-            IterNorm(proj_output_dim, num_groups=64, T=5, dim=2) if iternorm else nn.Identity(),
+            (IterNorm(proj_output_dim, num_groups=64, T=5, dim=2) if iternorm else nn.Identity()),
         )
 
     @staticmethod

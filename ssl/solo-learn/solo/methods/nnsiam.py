@@ -23,6 +23,7 @@ import omegaconf
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from solo.losses.simsiam import simsiam_loss_func
 from solo.methods.base import BaseMethod
 from solo.utils.misc import gather, omegaconf_select
@@ -106,7 +107,11 @@ class NNSiam(BaseMethod):
 
         extra_learnable_params: List[dict] = [
             {"name": "projector", "params": self.projector.parameters()},
-            {"name": "predictor", "params": self.predictor.parameters(), "static_lr": True},
+            {
+                "name": "predictor",
+                "params": self.predictor.parameters(),
+                "static_lr": True,
+            },
         ]
         return super().learnable_params + extra_learnable_params
 

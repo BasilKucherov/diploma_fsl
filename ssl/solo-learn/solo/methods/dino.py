@@ -23,6 +23,7 @@ import omegaconf
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from solo.losses.dino import DINOLoss
 from solo.methods.base import BaseMomentumMethod
 from solo.utils.misc import omegaconf_select, trunc_normal_

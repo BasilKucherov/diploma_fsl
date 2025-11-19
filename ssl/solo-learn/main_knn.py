@@ -25,9 +25,6 @@ from typing import Tuple
 import torch
 import torch.nn as nn
 from omegaconf import OmegaConf
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-
 from solo.args.knn import parse_args_knn
 from solo.data.classification_dataloader import (
     prepare_dataloaders,
@@ -36,6 +33,8 @@ from solo.data.classification_dataloader import (
 )
 from solo.methods import METHODS
 from solo.utils.knn import WeightedKNNClassifier
+from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 
 @torch.no_grad()

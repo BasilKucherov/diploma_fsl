@@ -31,12 +31,12 @@ import seaborn as sns
 import torch
 import torch.nn as nn
 import umap
+import wandb
 from lightning.pytorch.callbacks import Callback
 from matplotlib import pyplot as plt
 from omegaconf import DictConfig
 from tqdm import tqdm
 
-import wandb
 from solo.utils.misc import gather, omegaconf_select
 
 
@@ -199,7 +199,11 @@ class AutoUMAP(Callback):
             else:
                 anchor = (0.5, 1.35)
 
-            plt.legend(loc="upper center", bbox_to_anchor=anchor, ncol=math.ceil(num_classes / 10))
+            plt.legend(
+                loc="upper center",
+                bbox_to_anchor=anchor,
+                ncol=math.ceil(num_classes / 10),
+            )
             plt.tight_layout()
 
             if isinstance(trainer.logger, pl.loggers.WandbLogger):
