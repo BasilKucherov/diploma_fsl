@@ -5,8 +5,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-from tqdm import tqdm
-
 
 def natural_sort_key(s):
     """Sort strings containing numbers naturally."""
@@ -55,11 +53,12 @@ def main():
         sys.exit(0)
 
     print(f"Found {len(ckpts)} checkpoints.")
-    print(f"Results will be stored in: {ckpt_dir / args.output_file}")
 
     all_results = {}
 
-    for i, ckpt in enumerate(tqdm(ckpts, desc="Processing checkpoints")):
+    for i, ckpt in enumerate(ckpts):
+        print(f"\n[{i+1}/{len(ckpts)}] Processing {ckpt.name}...")
+
         # Extract epoch number for cleaner key
         match = re.search(r"ep=(\d+)", ckpt.name)
         epoch = int(match.group(1)) if match else i
@@ -83,31 +82,34 @@ def main():
                 cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
             )
 
-            output = []
+            output_lines = []
             # Print output in real-time, but indented
             while True:
                 line = process.stdout.readline()
                 if not line and process.poll() is not None:
                     break
                 if line:
-                    # Optional: Filter progress bars or just print everything
-                    # Only print lines that look like status updates or tqdm
-                    print(f"    {line.rstrip()}")
-                    output.append(line)
+                    line = line.rstrip()
+                    # Forward tqdm/status updates
+                    if "Encoding batches" in line or "%" in line:
+                        print(f"\r    {line}", end="")
+                    else:
+                        print(f"    {line}")
+                    output_lines.append(line)
 
             # Get remaining output
             stdout_rest, stderr = process.communicate()
             if stdout_rest:
                 for line in stdout_rest.splitlines():
                     print(f"    {line}")
-                    output.append(line)
-
-            output = "".join(output)
+                    output_lines.append(line)
 
             if process.returncode != 0:
-                print(f"  -> Error running script (Exit code {process.returncode})")
+                print(f"\n  -> Error running script (Exit code {process.returncode})")
                 print(stderr)
                 continue
+
+            output = "\n".join(output_lines)
 
             # Parse the output to find metrics
             # Expecting format:

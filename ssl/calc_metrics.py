@@ -147,8 +147,7 @@ def main():
 
     print("Computing embeddings...")
     with torch.no_grad():
-        # Use tqdm for progress bar
-        for batch in tqdm(dataloader, desc="Embedding batch"):
+        for batch in tqdm(dataloader, desc="Encoding batches"):
             (x1, x2, x_weak), _ = batch
 
             x1 = x1.to(args.device)
