@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -63,8 +64,13 @@ def main():
         match = re.search(r"ep=(\d+)", ckpt.name)
         epoch = int(match.group(1)) if match else i
 
+        # Set environment variable for unbuffered output
+        env = os.environ.copy()
+        env["PYTHONUNBUFFERED"] = "1"
+
         cmd = [
             sys.executable,
+            "-u",  # Force unbuffered binary stdout/stderr
             args.script_path,
             "--ckpt_path",
             str(ckpt),
@@ -78,8 +84,14 @@ def main():
 
         try:
             # Run the script and capture output. Using Popen to stream stdout.
+            # universal_newlines=True is same as text=True
             process = subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,  # Merge stderr into stdout so we capture tqdm
+                text=True,
+                bufsize=1,  # Line buffered
+                env=env,
             )
 
             output_lines = []
@@ -106,7 +118,7 @@ def main():
 
             if process.returncode != 0:
                 print(f"\n  -> Error running script (Exit code {process.returncode})")
-                print(stderr)
+                # stderr is merged to stdout, so it's already in output_lines
                 continue
 
             output = "\n".join(output_lines)
