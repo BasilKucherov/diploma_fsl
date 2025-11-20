@@ -168,12 +168,14 @@ class ResNet(nn.Module):
                 indim = list_of_out_dims[i]
 
         if flatten:
-            avgpool = nn.AvgPool2d(7)
+            # global average pooling – works for 84x84 and any other size
+            avgpool = nn.AdaptiveAvgPool2d((1, 1))
             trunk.append(avgpool)
             trunk.append(Flatten())
-            self.final_feat_dim = indim
+            self.final_feat_dim = indim  # 512 for ResNet10
         else:
-            self.final_feat_dim = [indim, 7, 7]
+            # don’t assume 7x7, just keep channels + spatial
+            self.final_feat_dim = [indim, None, None]
 
         self.trunk = nn.Sequential(*trunk)
 
