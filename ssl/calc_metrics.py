@@ -145,7 +145,7 @@ def main():
     z2_list = []
     z_weak_list = []
 
-    print("Computing embeddings...")
+    print("Computing embeddings...", flush=True)
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Encoding batches"):
             (x1, x2, x_weak), _ = batch
