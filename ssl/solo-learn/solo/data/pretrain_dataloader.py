@@ -209,6 +209,7 @@ def build_transform_pipeline(dataset, cfg):
         "stl10": ((0.4914, 0.4823, 0.4466), (0.247, 0.243, 0.261)),
         "imagenet100": (IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD),
         "imagenet": (IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD),
+        "miniimagenet": (IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD),
     }
 
     mean, std = MEANS_N_STD.get(
@@ -336,7 +337,7 @@ def prepare_datasets(
             transform=transform,
         )
 
-    elif dataset in ["imagenet", "imagenet100"]:
+    elif dataset in ["imagenet", "imagenet100", "miniimagenet"]:
         if data_format == "h5":
             assert _h5_available
             train_dataset = dataset_with_index(H5Dataset)(dataset, train_data_path, transform)

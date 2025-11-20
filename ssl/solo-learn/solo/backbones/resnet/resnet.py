@@ -17,7 +17,12 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-from torchvision.models import resnet18
-from torchvision.models import resnet50
+from torchvision.models import resnet18, resnet50
+from torchvision.models.resnet import BasicBlock, ResNet
 
-__all__ = ["resnet18", "resnet50"]
+
+def resnet10(**kwargs):
+    return ResNet(BasicBlock, [1, 1, 1, 1], **kwargs)
+
+
+__all__ = ["resnet10", "resnet18", "resnet50"]

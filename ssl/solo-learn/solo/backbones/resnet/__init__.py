@@ -17,8 +17,13 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+from .resnet import resnet10 as default_resnet10
 from .resnet import resnet18 as default_resnet18
 from .resnet import resnet50 as default_resnet50
+
+
+def resnet10(method, *args, **kwargs):
+    return default_resnet10(*args, **kwargs)
 
 
 def resnet18(method, *args, **kwargs):
@@ -29,4 +34,4 @@ def resnet50(method, *args, **kwargs):
     return default_resnet50(*args, **kwargs)
 
 
-__all__ = ["resnet18", "resnet50"]
+__all__ = ["resnet10", "resnet18", "resnet50"]

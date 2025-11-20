@@ -136,6 +136,7 @@ def prepare_transforms(dataset: str) -> Tuple[nn.Module, nn.Module]:
         "stl10": stl_pipeline,
         "imagenet100": imagenet_pipeline,
         "imagenet": imagenet_pipeline,
+        "miniimagenet": imagenet_pipeline,
         "custom": custom_pipeline,
     }
 
@@ -191,6 +192,7 @@ def prepare_datasets(
         "stl10",
         "imagenet",
         "imagenet100",
+        "miniimagenet",
         "custom",
     ]
 
@@ -224,7 +226,7 @@ def prepare_datasets(
             transform=T_val,
         )
 
-    elif dataset in ["imagenet", "imagenet100", "custom"]:
+    elif dataset in ["imagenet", "imagenet100", "miniimagenet", "custom"]:
         if data_format == "h5":
             assert _h5_available
             train_dataset = H5Dataset(dataset, train_data_path, T_train)

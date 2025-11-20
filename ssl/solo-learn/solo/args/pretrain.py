@@ -27,6 +27,7 @@ _N_CLASSES_PER_DATASET = {
     "stl10": 10,
     "imagenet": 1000,
     "imagenet100": 100,
+    "miniimagenet": 64,
 }
 
 _SUPPORTED_DATASETS = [
@@ -35,6 +36,7 @@ _SUPPORTED_DATASETS = [
     "stl10",
     "imagenet",
     "imagenet100",
+    "miniimagenet",
     "custom",
 ]
 
@@ -151,7 +153,12 @@ def parse_cfg(cfg: omegaconf.DictConfig):
 
     # adjust lr according to batch size
     cfg.num_nodes = omegaconf_select(cfg, "num_nodes", 1)
-    scale_factor = cfg.optimizer.batch_size * len(cfg.devices) * cfg.num_nodes / 256
+    if cfg.devices == "auto" or isinstance(cfg.devices, int):
+        num_devices = cfg.devices if isinstance(cfg.devices, int) else 1
+    else:
+        num_devices = len(cfg.devices)
+
+    scale_factor = cfg.optimizer.batch_size * num_devices * cfg.num_nodes / 256
     cfg.optimizer.lr = cfg.optimizer.lr * scale_factor
     if cfg.data.val_path is not None:
         assert not OmegaConf.is_missing(cfg, "optimizer.classifier_lr")

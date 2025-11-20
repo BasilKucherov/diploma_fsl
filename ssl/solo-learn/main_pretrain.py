@@ -19,6 +19,14 @@
 
 import inspect
 import os
+import warnings
+
+# Filter warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
+warnings.filterwarnings("ignore", category=FutureWarning, module="timm")
+
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 import hydra
 import torch
@@ -85,7 +93,7 @@ def main(cfg: DictConfig):
     # validation dataloader for when it is available
     if cfg.data.dataset == "custom" and (cfg.data.no_labels or cfg.data.val_path is None):
         val_loader = None
-    elif cfg.data.dataset in ["imagenet100", "imagenet"] and cfg.data.val_path is None:
+    elif cfg.data.dataset in ["imagenet100", "imagenet", "miniimagenet"] and cfg.data.val_path is None:
         val_loader = None
     else:
         if cfg.data.format == "dali":
