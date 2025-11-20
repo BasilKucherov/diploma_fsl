@@ -25,8 +25,7 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 warnings.filterwarnings("ignore", category=FutureWarning, module="timm")
 
-import os
-os.environ['KMP_DUPLICATE_LIB_OK']='True'
+os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 
 import hydra
 import torch
@@ -93,7 +92,10 @@ def main(cfg: DictConfig):
     # validation dataloader for when it is available
     if cfg.data.dataset == "custom" and (cfg.data.no_labels or cfg.data.val_path is None):
         val_loader = None
-    elif cfg.data.dataset in ["imagenet100", "imagenet", "miniimagenet"] and cfg.data.val_path is None:
+    elif (
+        cfg.data.dataset in ["imagenet100", "imagenet", "miniimagenet"]
+        and cfg.data.val_path is None
+    ):
         val_loader = None
     else:
         if cfg.data.format == "dali":
@@ -140,7 +142,8 @@ def main(cfg: DictConfig):
             dali_device=cfg.dali.device,
             encode_indexes_into_labels=cfg.dali.encode_indexes_into_labels,
         )
-        dali_datamodule.val_dataloader = lambda: val_loader
+        if val_loader is not None:
+            dali_datamodule.val_dataloader = lambda: val_loader
     else:
         pipelines = []
         for aug_cfg in cfg.augmentations:
