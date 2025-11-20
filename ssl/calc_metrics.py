@@ -132,13 +132,27 @@ def main():
 
     print(f"Loading data from {args.data_path}")
     # Dataset
-    from torchvision.datasets import ImageFolder
+    try:
+        from dali_metric_transforms import build_dali_metric_loader
+        USE_DALI = True
+    except ImportError:
+        print("DALI loader not found or DALI not installed. Falling back to torchvision.")
+        USE_DALI = False
 
-    dataset = ImageFolder(args.data_path, transform=MetricTransform())
-
-    dataloader = torch.utils.data.DataLoader(
-        dataset, batch_size=args.batch_size, shuffle=False, num_workers=4, drop_last=False
-    )
+    if USE_DALI:
+        dataloader, epoch_size = build_dali_metric_loader(
+            data_path=args.data_path,
+            batch_size=args.batch_size,
+            num_workers=4,
+            device=args.device,
+        )
+        # DALI output is a bit different
+    else:
+        from torchvision.datasets import ImageFolder
+        dataset = ImageFolder(args.data_path, transform=MetricTransform())
+        dataloader = torch.utils.data.DataLoader(
+            dataset, batch_size=args.batch_size, shuffle=False, num_workers=4, drop_last=False
+        )
 
     # Collect embeddings
     z1_list = []
@@ -148,7 +162,22 @@ def main():
     print("Computing embeddings...", flush=True)
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Encoding batches"):
-            (x1, x2, x_weak), _ = batch
+            if USE_DALI:
+                # batch is a list of dictionaries or tuples from DALIGenericIterator
+                # We configured output_map=["x1", "x2", "x_weak"]
+                # DALIGenericIterator returns a list of batch objects (one per GPU if using multiple, but we use 1)
+                # Each element is a dict: {'x1': tensor, 'x2': tensor, 'x_weak': tensor}
+                
+                # batch[0] is the dict for the first pipeline (we only have 1)
+                data_dict = batch[0]
+                x1 = data_dict["x1"]
+                x2 = data_dict["x2"]
+                x_weak = data_dict["x_weak"]
+                
+                # DALI tensors might need to be moved/converted if they aren't already torch tensors?
+                # DALIGenericIterator returns torch tensors by default if using pytorch plugin.
+            else:
+                (x1, x2, x_weak), _ = batch
 
             x1 = x1.to(args.device)
             x2 = x2.to(args.device)
