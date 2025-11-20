@@ -78,9 +78,36 @@ def main():
         ]
 
         try:
-            # Run the script and capture output
-            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
-            output = result.stdout
+            # Run the script and capture output. Using Popen to stream stdout.
+            process = subprocess.Popen(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+            )
+
+            output = []
+            # Print output in real-time, but indented
+            while True:
+                line = process.stdout.readline()
+                if not line and process.poll() is not None:
+                    break
+                if line:
+                    # Optional: Filter progress bars or just print everything
+                    # Only print lines that look like status updates or tqdm
+                    print(f"    {line.rstrip()}")
+                    output.append(line)
+
+            # Get remaining output
+            stdout_rest, stderr = process.communicate()
+            if stdout_rest:
+                for line in stdout_rest.splitlines():
+                    print(f"    {line}")
+                    output.append(line)
+
+            output = "".join(output)
+
+            if process.returncode != 0:
+                print(f"  -> Error running script (Exit code {process.returncode})")
+                print(stderr)
+                continue
 
             # Parse the output to find metrics
             # Expecting format:
