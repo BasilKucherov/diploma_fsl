@@ -7,7 +7,10 @@ import torchvision.transforms as transforms
 from PIL import ImageFile
 from torchvision.datasets import ImageFolder
 
-import datasets.additional_transforms as add_transforms
+try:
+    import datasets.additional_transforms as add_transforms
+except ImportError:
+    from . import additional_transforms as add_transforms
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
