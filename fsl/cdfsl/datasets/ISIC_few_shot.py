@@ -135,7 +135,9 @@ class SetDataset:
 
 
 class SubDataset:
-    def __init__(self, sub_meta, cl, transform=transforms.ToTensor(), target_transform=identity_transform):
+    def __init__(
+        self, sub_meta, cl, transform=transforms.ToTensor(), target_transform=identity_transform
+    ):
         self.sub_meta = sub_meta
         self.cl = cl
         self.transform = transform
@@ -180,13 +182,14 @@ class TransformLoader:
         if transform_type == "ImageJitter":
             method = add_transforms.ImageJitter(self.jitter_param)
             return method
+        if transform_type == "Scale":
+            return transforms.Resize([int(self.image_size * 1.15), int(self.image_size * 1.15)])
+
         method = getattr(transforms, transform_type)
         if transform_type == "RandomSizedCrop":
             return method(self.image_size)
         elif transform_type == "CenterCrop":
             return method(self.image_size)
-        elif transform_type == "Scale":
-            return transforms.Resize([int(self.image_size * 1.15), int(self.image_size * 1.15)])
         elif transform_type == "Normalize":
             return method(**self.normalize_param)
         else:
