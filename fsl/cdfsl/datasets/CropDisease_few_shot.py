@@ -16,11 +16,13 @@ import sys
 sys.path.append("../")
 from configs import *
 
-identity = lambda x: x
+
+def identity_transform(x):
+    return x
 
 
 class SimpleDataset:
-    def __init__(self, transform, target_transform=identity):
+    def __init__(self, transform, target_transform=identity_transform):
         self.transform = transform
         self.target_transform = target_transform
 
@@ -84,7 +86,9 @@ class SetDataset:
 
 
 class SubDataset:
-    def __init__(self, sub_meta, cl, transform=transforms.ToTensor(), target_transform=identity):
+    def __init__(
+        self, sub_meta, cl, transform=transforms.ToTensor(), target_transform=identity_transform
+    ):
         self.sub_meta = sub_meta
         self.cl = cl
         self.transform = transform
@@ -135,7 +139,7 @@ class TransformLoader:
         elif transform_type == "CenterCrop":
             return method(self.image_size)
         elif transform_type == "Scale":
-            return method([int(self.image_size * 1.15), int(self.image_size * 1.15)])
+            return transforms.Resize([int(self.image_size * 1.15), int(self.image_size * 1.15)])
         elif transform_type == "Normalize":
             return method(**self.normalize_param)
         else:
@@ -153,7 +157,19 @@ class TransformLoader:
         else:
             transform_list = ["Scale", "CenterCrop", "ToTensor", "Normalize"]
 
-        transform_funcs = [self.parse_transform(x) for x in transform_list]
+        transform_funcs = []
+        for x in transform_list:
+            if x == "Scale":
+                transform_funcs.append(
+                    transforms.Resize([int(self.image_size * 1.15), int(self.image_size * 1.15)])
+                )
+            elif x == "RandomSizedCrop":
+                transform_funcs.append(transforms.RandomResizedCrop(self.image_size))
+            elif x == "CenterCrop":
+                transform_funcs.append(transforms.CenterCrop(self.image_size))
+            else:
+                transform_funcs.append(self.parse_transform(x))
+
         transform = transforms.Compose(transform_funcs)
         return transform
 
@@ -196,7 +212,7 @@ class SetDataManager(DataManager):
         transform = self.trans_loader.get_composed_transform(aug)
         dataset = SetDataset(self.batch_size, transform)
         sampler = EpisodicBatchSampler(len(dataset), self.n_way, self.n_eposide)
-        data_loader_params = dict(batch_sampler=sampler, num_workers=12, pin_memory=True)
+        data_loader_params = dict(batch_sampler=sampler, num_workers=0, pin_memory=False)
         data_loader = torch.utils.data.DataLoader(dataset, **data_loader_params)
         return data_loader
 
