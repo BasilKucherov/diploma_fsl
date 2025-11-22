@@ -91,8 +91,26 @@ class CustomDatasetFromImages(Dataset):
 
             print("Scanning for ChestX images in subdirectories...")
             # Look for images_*/images/*.png and images_*/*.png
-            candidates = glob.glob(os.path.join(self.img_path, "images_*", "images", "*.png"))
-            candidates += glob.glob(os.path.join(self.img_path, "images_*", "*.png"))
+            # self.img_path is /workspace/datasets/ChestXrays/images/ based on __init__ default?
+            # No, user passed /workspace/datasets/ChestXrays (via configs.ChestX_path)
+
+            # In __init__:
+            # image_path=ChestX_path + "/images/",
+
+            # So self.img_path is .../ChestXrays/images/
+            # But that directory doesn't exist or is empty/split.
+
+            # We need to look one level UP from self.img_path if it includes "images/"
+            # Or strictly use the root path.
+
+            # If self.img_path ends with "images/", base_root is the parent.
+            if self.img_path.rstrip("/").endswith("images"):
+                base_root = os.path.dirname(self.img_path.rstrip("/"))
+            else:
+                base_root = self.img_path
+
+            candidates = glob.glob(os.path.join(base_root, "images_*", "images", "*.png"))
+            candidates += glob.glob(os.path.join(base_root, "images_*", "*.png"))
 
             for p in candidates:
                 filename = os.path.basename(p)
