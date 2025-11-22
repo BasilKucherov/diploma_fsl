@@ -70,6 +70,35 @@ class CustomDatasetFromImages(Dataset):
         self.image_name_all = np.asarray(self.data_info.iloc[:, 0])
         self.labels_all = np.asarray(self.data_info.iloc[:, 1])
 
+        # Create a map of image filename -> full path
+        # Because images are split into images_001, images_002, etc.
+        # We assume self.img_path is the parent directory containing images_* folders
+        import glob
+        import os
+
+        self.image_path_map = {}
+        # Check if we have a single images folder or split folders
+        if os.path.isdir(os.path.join(self.img_path, "images")):
+            # Standard structure or symlinked
+            pass  # Default logic will work if we just use self.img_path + "images/" + name
+        else:
+            # Scan for all pngs in subfolders
+            # This might be slow, so maybe we can just check existence?
+            # Or pre-scan. Pre-scanning is better.
+            # Assuming structure /workspace/datasets/ChestXrays/images_*/images/*.png OR /workspace/datasets/ChestXrays/images_/*.png
+            # User showed: /workspace/datasets/ChestXrays/images_001/images/00000001_000.png
+            # So it's images_*/images/*.png
+
+            print("Scanning for ChestX images in subdirectories...")
+            # Look for images_*/images/*.png and images_*/*.png
+            candidates = glob.glob(os.path.join(self.img_path, "images_*", "images", "*.png"))
+            candidates += glob.glob(os.path.join(self.img_path, "images_*", "*.png"))
+
+            for p in candidates:
+                filename = os.path.basename(p)
+                self.image_path_map[filename] = p
+            print(f"Found {len(self.image_path_map)} images.")
+
         self.image_name = []
         self.labels = []
 
@@ -95,7 +124,14 @@ class CustomDatasetFromImages(Dataset):
         single_image_name = self.image_name[index]
 
         # Open image
-        img_as_img = Image.open(self.img_path + single_image_name).resize((256, 256)).convert("RGB")
+        # Resolve path
+        if hasattr(self, "image_path_map") and single_image_name in self.image_path_map:
+            path = self.image_path_map[single_image_name]
+        else:
+            # Fallback to default path construction
+            path = self.img_path + single_image_name
+
+        img_as_img = Image.open(path).resize((256, 256)).convert("RGB")
         img_as_img.load()
 
         # Transform image to tensor
