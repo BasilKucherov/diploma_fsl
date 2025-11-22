@@ -25,9 +25,8 @@ from configs import *
 class CustomDatasetFromImages(Dataset):
     def __init__(
         self,
-        csv_path=ISIC_path
-        + "/ISIC2018_Task3_Training_GroundTruth/ISIC2018_Task3_Training_GroundTruth.csv",
-        image_path=ISIC_path + "/ISIC2018_Task3_Training_Input/",
+        csv_path=ISIC_path + "/ISIC2018_Task3_Training_GroundTruth.csv",
+        image_path=ISIC_path + "/",
     ):
         """
         Args:

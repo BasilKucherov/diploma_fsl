@@ -10,7 +10,10 @@ from PIL import Image, ImageFile
 from torch.utils.data import Dataset
 
 try:
+    try:
     import datasets.additional_transforms as add_transforms
+except ImportError:
+    from . import additional_transforms as add_transforms
 except ImportError:
     from . import additional_transforms as add_transforms
 
