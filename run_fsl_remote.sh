@@ -5,6 +5,7 @@ CKPT_DIR="ssl/solo-learn/trained_models"
 DATASETS_DIR="/workspace/datasets"
 OUTPUT_FILE="fsl_results.txt"
 DEVICE="cuda"
+TARGET_METHOD=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -29,6 +30,11 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
+    --method)
+      TARGET_METHOD="$2"
+      shift # past argument
+      shift # past value
+      ;;
     *)
       echo "Unknown argument: $1"
       exit 1
@@ -41,14 +47,26 @@ echo "Checkpoint Directory: $CKPT_DIR"
 echo "Datasets Directory: $DATASETS_DIR"
 echo "Output File: $OUTPUT_FILE"
 echo "Device: $DEVICE"
+if [ -n "$TARGET_METHOD" ]; then
+    echo "Target Method: $TARGET_METHOD"
+else
+    echo "Target Method: ALL (simclr, byol, swav, vicreg)"
+fi
 
 # Create output file
 touch $OUTPUT_FILE
 
+# Determine methods to run
+if [ -n "$TARGET_METHOD" ]; then
+    METHODS="$TARGET_METHOD"
+else
+    METHODS="simclr byol swav vicreg"
+fi
+
 # Iterate over methods and seeds if applicable (adjust structure based on actual directory layout)
 # Assuming structure: ssl/solo-learn/trained_models/<method>/<seed>/<checkpoint>
 
-for method in simclr byol swav vicreg; do
+for method in $METHODS; do
     echo "Processing method: $method"
     
     echo "Evaluating method: $method"
